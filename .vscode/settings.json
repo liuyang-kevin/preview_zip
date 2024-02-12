@@ -1,0 +1,23 @@
+{
+    // "editor.links": false,
+    "go.testFlags": [
+        "-v"
+    ],
+    "go.testEnvVars": {
+        "WORKSPACE_DIR": "${workspaceFolder}"
+    },
+    "gopls": {
+        "ui.navigation.importShortcut": "Definition"
+    },
+    // "go.toolsEnvVars": {
+    //     // "GOFLAGS": "-mod=vendor"
+    //     "GOFLAGS": "-mod=mod"
+    // },
+    // "go.useLanguageServer": true,
+    // "go.inferGopath": true,
+    "terminal.integrated.env.windows": {
+        // "GOROOT": "${env:USERPROFILE}/go",
+        "PATH": "${workspaceRoot}/.libs/bin;${env:PATH}",
+        "GOPATH": "${workspaceRoot}/.libs"
+    }
+}
