@@ -19,5 +19,6 @@
         // "GOROOT": "${env:USERPROFILE}/go",
         "PATH": "${workspaceRoot}/.libs/bin;${env:PATH}",
         "GOPATH": "${workspaceRoot}/.libs"
-    }
+    },
+    "dart.lineLength": 120
 }

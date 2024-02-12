@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
@@ -10,13 +11,21 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:preview_zip_website/pages/webview_page.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'inner_server.dart';
+import 'key.dart';
 import 'model/vm/global.dart';
 import 'widgets/draggable_switch.dart';
 import 'widgets/folder_tree_view.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    await windowManager.ensureInitialized();
+  }
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -24,6 +33,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       initialRoute: '/',
       routes: {
         '/': (context) => const MyHomePage(),
@@ -42,6 +52,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool autoPreviewDone = false;
+  bool isOpenInDetailPage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -54,44 +65,71 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Flexible(
-                child: Consumer<GlobalVM>(
-                  builder: (context, value, child) {
-                    print('value.folderPath ${value.folderPath}');
-                    if (value.folderPath.isEmpty) return Text('拖拽');
-                    SchedulerBinding.instance.addPostFrameCallback((_) {
-                      // 检查文件夹是否包含index.html
-                      if (!autoPreviewDone && InnerServer.hasIndexHtml(value.folderPath)) {
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ExampleDragTarget(
+                      onDragDone: (_) {
                         setState(() {
-                          autoPreviewDone = true;
+                          autoPreviewDone = false;
                         });
-                        Navigator.pushNamed(context, '/detail', arguments: {'folderPath': value.folderPath});
-                      } else {}
-                    });
+                      },
+                      onClickZipFileBtn: (folderPath) {
+                        if (isOpenInDetailPage) {
+                          Navigator.pushNamed(context, '/detail', arguments: {'folderPath': folderPath});
+                        } else {
+                          Provider.of<GlobalVM>(context, listen: false).updateUnzipFloder(folderPath);
+                        }
+                      },
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: Consumer<GlobalVM>(
+                        builder: (context, value, child) {
+                          print('value.folderPath ${value.folderPath}');
+                          if (value.folderPath.isEmpty) return Text('拖拽');
+                          if (isOpenInDetailPage) {
+                            SchedulerBinding.instance.addPostFrameCallback((_) {
+                              // 检查文件夹是否包含index.html
+                              if (!autoPreviewDone && InnerServer.hasIndexHtml(value.folderPath)) {
+                                setState(() {
+                                  autoPreviewDone = true;
+                                });
+                                Navigator.pushNamed(context, '/detail', arguments: {'folderPath': value.folderPath});
+                              } else {}
+                            });
+                          }
 
-                    return FolderTreeView(folderPath: value.folderPath);
-                  },
+                          return FolderTreeView(folderPath: value.folderPath);
+                        },
+                      ),
+                    )
+                  ],
                 ),
               ),
-              Column(
-                children: [
-                  ExampleDragTarget(
-                    onDragDone: (_) {
-                      setState(() {
-                        autoPreviewDone = false;
-                      });
-                    },
-                  ),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/detail');
-                      },
-                      child: Text('查看详细信息'),
-                    ),
-                  )
-                ],
+              Flexible(
+                flex: 5,
+                child: Consumer<GlobalVM>(
+                  builder: (context, value, child) {
+                    Widget webviewWithServer = const Text("未实现");
+                    if (value.folderPath.isEmpty) {
+                      return const Text("拖拽zip预览");
+                    }
+                    if (Platform.isWindows) {
+                      print('asdfasdfasdfasdf, ${value.folderPath}');
+                      webviewWithServer = FutureBuilder(
+                          future: InnerServer.startServer(value.folderPath, 8080),
+                          builder: (context, snap) {
+                            return const Center(child: WinBrowser());
+                          });
+                    }
+                    return webviewWithServer;
+                  },
+                ),
               )
             ],
           ),
@@ -103,14 +141,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class ExampleDragTarget extends StatefulWidget {
   final void Function(DropDoneDetails)? onDragDone;
-  const ExampleDragTarget({Key? key, this.onDragDone}) : super(key: key);
+  final void Function(String)? onClickZipFileBtn;
+  const ExampleDragTarget({Key? key, this.onDragDone, this.onClickZipFileBtn}) : super(key: key);
 
   @override
   createState() => _ExampleDragTargetState();
 }
 
 class _ExampleDragTargetState extends State<ExampleDragTarget> {
-  Future<void> _unzipToTempFolder(String zipFilePath) async {
+  Future<String> _unzipToTempFolder(String zipFilePath) async {
     try {
       Directory tempDir = await getTemporaryDirectory();
       String tempPath = tempDir.path;
@@ -156,9 +195,11 @@ class _ExampleDragTargetState extends State<ExampleDragTarget> {
       );
 
       Provider.of<GlobalVM>(context, listen: false).updateUnzipFloder(unZipFloderPath);
+      return unZipFloderPath;
     } catch (e) {
       print('Error extracting Zip file: $e');
     }
+    return '';
   }
 
   final List<XFile> _list = [];
@@ -189,10 +230,24 @@ class _ExampleDragTargetState extends State<ExampleDragTarget> {
         });
       },
       child: Container(
-        height: 200,
-        width: 200,
+        width: double.infinity,
+        constraints: const BoxConstraints(maxHeight: 350),
         color: _dragging ? Colors.blue.withOpacity(0.4) : Colors.black26,
-        child: _list.isEmpty ? const Center(child: Text("Drop here")) : Text(_list.join("\n")),
+        child: _list.isEmpty
+            ? const Center(child: Text("Drop here"))
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    ..._list.map((e) => TextButton(
+                        onPressed: () {
+                          _unzipToTempFolder(e.path).then((path) => widget.onClickZipFileBtn?.call(path));
+                        },
+                        child: Text(e.name)))
+                  ],
+                ),
+              ),
       ),
     );
   }

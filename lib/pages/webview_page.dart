@@ -1,6 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:preview_zip_website/inner_server.dart';
-import 'package:webview_all/webview_all.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+
+import 'package:webview_windows/webview_windows.dart';
+import 'package:window_manager/window_manager.dart';
+
+import '../key.dart';
+import '../model/vm/global.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({super.key});
@@ -14,16 +24,250 @@ class _MyAppState extends State<DetailPage> {
   Widget build(BuildContext context) {
     final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final String folderPath = args != null ? args['folderPath'] ?? "" : "";
-    return Scaffold(
-      body: FutureBuilder(
+    Widget webviewWithServer = const Text("未实现");
+    if (Platform.isWindows) {
+      webviewWithServer = FutureBuilder(
           future: InnerServer.startServer(folderPath, 8080),
           builder: (context, snap) {
-            return const Center(child: Webview(url: "http://127.0.0.1:8080"));
-          }),
+            return const Center(child: WinBrowser());
+          });
+    }
+
+    return Scaffold(
+      body: webviewWithServer,
+      // floatingActionButton: FloatingActionButton(
+      //   child: const Icon(Icons.arrow_back),
+      //   onPressed: () => Navigator.pop(context),
+      // ),
+    );
+  }
+}
+
+class WinBrowser extends StatefulWidget {
+  const WinBrowser({super.key});
+
+  @override
+  State<WinBrowser> createState() => _WinBrowser();
+}
+
+class _WinBrowser extends State<WinBrowser> {
+  final _controller = WebviewController();
+  final _textController = TextEditingController();
+  final List<StreamSubscription> _subscriptions = [];
+  bool _isWebviewSuspended = false;
+
+  late GlobalVM _notifier;
+
+  @override
+  void initState() {
+    super.initState();
+    initPlatformState();
+
+    _notifier = Provider.of<GlobalVM>(context, listen: false);
+    _notifier.addListener(_listener);
+  }
+
+  // 监听器方法
+  void _listener() {
+    _controller.reload();
+    // setState(() {
+    //   // 更新UI
+    // });
+  }
+
+  Future<void> initPlatformState() async {
+    // Optionally initialize the webview environment using
+    // a custom user data directory
+    // and/or a custom browser executable directory
+    // and/or custom chromium command line flags
+    //await WebviewController.initializeEnvironment(
+    //    additionalArguments: '--show-fps-counter');
+
+    try {
+      await _controller.initialize();
+      _subscriptions.add(_controller.url.listen((url) {
+        _textController.text = url;
+      }));
+
+      _subscriptions.add(_controller.containsFullScreenElementChanged.listen((flag) {
+        debugPrint('Contains fullscreen element: $flag');
+        windowManager.setFullScreen(flag);
+      }));
+
+      await _controller.setBackgroundColor(Colors.transparent);
+      await _controller.setPopupWindowPolicy(WebviewPopupWindowPolicy.deny);
+      // await _controller.loadUrl('https://flutter.dev');
+      await _controller.loadUrl('http://127.0.0.1:8080');
+
+      if (!mounted) return;
+      setState(() {});
+    } on PlatformException catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+                  title: Text('Error'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Code: ${e.code}'),
+                      Text('Message: ${e.message}'),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      child: Text('Continue'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    )
+                  ],
+                ));
+      });
+    }
+  }
+
+  Widget compositeView() {
+    if (!_controller.value.isInitialized) {
+      return const Text(
+        'Not Initialized',
+        style: TextStyle(
+          fontSize: 24.0,
+          fontWeight: FontWeight.w900,
+        ),
+      );
+    } else {
+      return Padding(
+        // padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(0),
+        child: Column(
+          children: [
+            Card(
+              elevation: 0,
+              child: Row(children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'URL',
+                      contentPadding: EdgeInsets.all(10.0),
+                    ),
+                    textAlignVertical: TextAlignVertical.center,
+                    controller: _textController,
+                    onSubmitted: (val) {
+                      _controller.loadUrl(val);
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  splashRadius: 20,
+                  onPressed: () {
+                    _controller.reload();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.developer_mode),
+                  tooltip: 'Open DevTools',
+                  splashRadius: 20,
+                  onPressed: () {
+                    _controller.openDevTools();
+                  },
+                )
+              ]),
+            ),
+            // webview 部分
+            Expanded(
+              child: Card(
+                color: Colors.transparent,
+                elevation: 0,
+                clipBehavior: Clip.antiAliasWithSaveLayer,
+                margin: EdgeInsets.zero,
+                child: Stack(
+                  children: [
+                    Webview(
+                      _controller,
+                      permissionRequested: _onPermissionRequested,
+                    ),
+                    // 加载的时候放入flutter loading
+                    StreamBuilder<LoadingState>(
+                        stream: _controller.loadingState,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData && snapshot.data == LoadingState.loading) {
+                            return const LinearProgressIndicator();
+                          } else {
+                            return const SizedBox();
+                          }
+                        }),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
+        tooltip: _isWebviewSuspended ? 'Resume webview' : 'Suspend webview',
+        onPressed: () async {
+          if (_isWebviewSuspended) {
+            await _controller.resume();
+          } else {
+            await _controller.suspend();
+          }
+          setState(() {
+            _isWebviewSuspended = !_isWebviewSuspended;
+          });
+        },
+        child: Icon(_isWebviewSuspended ? Icons.play_arrow : Icons.pause),
+      ),
+      appBar: AppBar(
+          title: StreamBuilder<String>(
+        stream: _controller.title,
+        builder: (context, snapshot) {
+          return Text(snapshot.hasData ? snapshot.data! : 'WebView (Windows) Example');
+        },
+      )),
+      body: Center(
+        child: compositeView(),
       ),
     );
+  }
+
+  Future<WebviewPermissionDecision> _onPermissionRequested(
+      String url, WebviewPermissionKind kind, bool isUserInitiated) async {
+    final decision = await showDialog<WebviewPermissionDecision>(
+      context: navigatorKey.currentContext!,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('WebView permission requested'),
+        content: Text('WebView has requested permission \'$kind\''),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, WebviewPermissionDecision.deny),
+            child: const Text('Deny'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, WebviewPermissionDecision.allow),
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+
+    return decision ?? WebviewPermissionDecision.none;
+  }
+
+  @override
+  void dispose() {
+    _notifier.removeListener(_listener);
+
+    _subscriptions.forEach((s) => s.cancel());
+    _controller.dispose();
+    super.dispose();
   }
 }

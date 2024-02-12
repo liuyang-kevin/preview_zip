@@ -9,18 +9,13 @@ class InnerServer {
   static shelf.Handler? _handler;
 
   static Future<void> startServer(String directoryPath, int port) async {
-    if (_server != null && _server!.port == port) {
-      print('Server is already running on port $port');
-      return;
+    if (_server != null) {
+      print('Server is already running on port $port, close it');
+      await _server!.close(force: true);
     }
 
     _directoryPath = directoryPath;
     _handler = _createHandler(_directoryPath);
-
-    // 如果服务器已经启动，关闭它
-    if (_server != null) {
-      await _server!.close(force: true);
-    }
 
     // 启动新的服务器
     _server = await io.serve(_handler!, InternetAddress.anyIPv4, port);
