@@ -1,14 +1,12 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:preview_zip_website/pages/webview_page.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -16,7 +14,6 @@ import 'package:window_manager/window_manager.dart';
 import 'inner_server.dart';
 import 'key.dart';
 import 'model/vm/global.dart';
-import 'widgets/draggable_switch.dart';
 import 'widgets/folder_tree_view.dart';
 
 void main() async {
