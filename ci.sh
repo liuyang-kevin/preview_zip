@@ -17,3 +17,5 @@ git tag "$1"
 
 # 推送提交和标签到远程仓库
 git push origin "$1"
+
+git push
