@@ -42,8 +42,8 @@ jobs:
   #         files: build/linux/x64/release/bundle/MacRecoveryX-${{github.ref_name}}-linux.zip
 
   build-and-release-windows:
-    # env:
-    #   CMAKE_SYSTEM_VERSION: 10.0.22621.0
+    env:
+      CMAKE_SYSTEM_VERSION: 10.0.22621.0
     # runs-on: windows-latest
     runs-on: windows-2022
 
