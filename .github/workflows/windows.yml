@@ -50,7 +50,12 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.16.9'
-      - uses: NuGet/setup-nuget@v2.0.0
+      # - uses: NuGet/setup-nuget@v2.0.0
+      - name: Setup MSVC dev command prompt
+        uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+          toolset: 14.38.33130
       - name: flutter doctor
         run: flutter doctor
       - name: Install project dependencies
