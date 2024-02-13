@@ -91,15 +91,28 @@ jobs:
       # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
       #   with:
       #     sdk-version: 22621
-      - name: Build new SDK
-        shell: bash
-        run: |
-          cd windows
-          cmake -DCMAKE_SYSTEM_VERSION=10.0.22621.0
+      # - name: Build new SDK
+      #   shell: bash
+      #   run: |
+      #     cmake -DCMAKE_SYSTEM_VERSION=10.0.22621.0
       # - name: flutter doctor
       #   run: flutter doctor
       # - name: Install project dependencies
       #   run: flutter pub get
+
+
+      - name: Set Windows SDK version
+        run: |
+          choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64
+          set "VCToolsInstallDir=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC"
+          set "SdkVersion=10.0.22621.0"
+          set "UniversalCRTSdkDir=%VCToolsInstallDir%\..\..\..\..\Windows Kits\10\"
+          set "UniversalCRTSdkDirVersion=%UniversalCRTSdkDir%Include\%SdkVersion%\ucrt"
+          set "WindowsSDKLibVersion=%UniversalCRTSdkDir%Lib\%SdkVersion%\um\x64"
+          set "WindowsSDKDesktopHeadersVersion=%UniversalCRTSdkDir%Include\%SdkVersion%\shared"
+          set "PATH=%PATH%;%UniversalCRTSdkDir%\bin\x64;%UniversalCRTSdkDir%\bin\x86;%VCToolsInstallDir%\bin\Hostx64\x64"
+          echo Installed Windows SDK version %SdkVersion%
       - name: Build artifacts
         run: flutter build windows --release
       - name: Archive Release
