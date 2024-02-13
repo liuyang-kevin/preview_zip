@@ -49,6 +49,7 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.16.9'
+      - uses: NuGet/setup-nuget@v2.0.0
       - name: Install project dependencies
         run: flutter pub get
       - name: Build artifacts
