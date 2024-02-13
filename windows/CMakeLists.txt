@@ -1,6 +1,7 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
 project(preview_zip_website LANGUAGES CXX)
+set(CMAKE_SYSTEM_VERSION 10.0.22621.0)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
