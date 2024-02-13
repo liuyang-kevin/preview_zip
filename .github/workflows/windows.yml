@@ -50,10 +50,12 @@ jobs:
           channel: 'stable'
           flutter-version: '3.16.9'
       - uses: NuGet/setup-nuget@v2.0.0
+      - name: flutter doctor
+        run: flutter doctor
       - name: Install project dependencies
         run: flutter pub get
       - name: Build artifacts
-        run: flutter build windows --release
+        run: flutter build windows --release -v
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
