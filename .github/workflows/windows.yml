@@ -41,7 +41,8 @@ jobs:
   #         files: build/linux/x64/release/bundle/MacRecoveryX-${{github.ref_name}}-linux.zip
 
   build-and-release-windows:
-    runs-on: windows-latest
+    # runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - uses: actions/checkout@v4
