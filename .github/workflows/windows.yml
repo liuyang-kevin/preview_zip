@@ -86,9 +86,9 @@ jobs:
       #     # should be run twice
       #     $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
       #     $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-      # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
-      #   with:
-      #     sdk-version: 22621
+      - uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
+        with:
+          sdk-version: 22621
       # - name: Build new SDK
       #   shell: bash
       #   run: |
