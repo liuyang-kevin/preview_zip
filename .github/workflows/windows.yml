@@ -43,6 +43,8 @@ jobs:
   build-and-release-windows:
     env:
       CMAKE_SYSTEM_VERSION: 10.0.22621.0
+    permissions:
+      contents: write
     # runs-on: windows-latest
     runs-on: windows-2022
 
