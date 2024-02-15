@@ -7,39 +7,6 @@ on:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  # build-and-release-linux:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: subosito/flutter-action@v1
-  #       with:
-  #         channel: 'stable'
-  #         flutter-version: '2.10.0'
-  #     - name: Install dependencies
-  #       run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
-  #     - name: Install project dependencies
-  #       run: flutter pub get
-  #     - name: Generate intermediates
-  #       run: flutter pub run build_runner build --delete-conflicting-outputs
-  #     - name: Enable linux build
-  #       run: flutter config --enable-linux-desktop
-  #     - name: Build artifacts
-  #       run: flutter build linux --release
-  #     - name: Archive Release
-  #       uses: thedoctor0/zip-release@master
-  #       with:
-  #         type: 'zip'
-  #         filename: MacRecoveryX-${{github.ref_name}}-linux.zip
-  #         directory: build/linux/x64/release/bundle
-  #     - name: Linux Release
-  #       uses: softprops/action-gh-release@v1
-  #       if: startsWith(github.ref, 'refs/tags/')
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         files: build/linux/x64/release/bundle/MacRecoveryX-${{github.ref_name}}-linux.zip
-
   build-and-release-windows:
     env:
       CMAKE_SYSTEM_VERSION: 10.0.22621.0
@@ -54,57 +21,10 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.16.9'
-      # - uses: NuGet/setup-nuget@v2.0.0  # 2022 已经携带
-      # - name: Setup MSVC dev command prompt # 并不起效, 因为14.37版本更靠前, 没找到其他设置版本的参数
-      #   uses: TheMrMilchmann/setup-msvc-dev@v3
-      #   with:
-      #     arch: x64
-      #     toolset: 14.38.33130
-      - name: 删除不需要的版本,强制webview可以编译
-        run: |
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $componentsToRemove= @(
-            "Microsoft.VisualStudio.Component.Windows10SDK.19041"
-            "Microsoft.VisualStudio.Component.Windows10SDK.20348"
-            "Microsoft.VisualStudio.Component.Windows10SDK.22000"
-            "Microsoft.VisualStudio.Component.Windows10SDK"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64.Spectre"
-          )
-          [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
-          # should be run twice
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-      # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
-      #   with:
-      #     sdk-version: 22621
-      # - name: Build new SDK
-      #   shell: bash
-      #   run: |
-      #     cmake -DCMAKE_SYSTEM_VERSION=10.0.22621.0
-      # - name: flutter doctor
-      #   run: flutter doctor
-      # - name: Install project dependencies
-      #   run: flutter pub get
       - name: Build artifacts
+        env:
+          CMAKE_SYSTEM_VERSION: 10.0.22621.0
+          CMAKE_WINDOWS_KITS_10_DIR: C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0
         run: flutter build windows --release
       - name: Archive Release
         uses: thedoctor0/zip-release@master
@@ -124,34 +44,3 @@ jobs:
           draft: false
           prerelease: false
           files: build/windows/x64/runner/Release/preview_zip_website-${{github.ref_name}}-windows.zip
-
-  # build-and-release-macos:
-  #   runs-on: macos-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: subosito/flutter-action@v1
-  #       with:
-  #         channel: 'stable'
-  #         flutter-version: '2.10.0'
-  #     - name: Install project dependencies
-  #       run: flutter pub get
-  #     - name: Generate intermediates
-  #       run: flutter pub run build_runner build --delete-conflicting-outputs
-  #     - name: Enable macOS build
-  #       run: flutter config --enable-macos-desktop
-  #     - name: Build artifacts
-  #       run: flutter build macos --release
-  #     - name: Archive Release
-  #       uses: thedoctor0/zip-release@master
-  #       with:
-  #         type: 'zip'
-  #         filename: MacRecoveryX-${{github.ref_name}}-macos.zip
-  #         directory: build/macos/Build/Products/Release
-  #     - name: macOS Release
-  #       uses: softprops/action-gh-release@v1
-  #       if: startsWith(github.ref, 'refs/tags/')
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         files: build/macos/Build/Products/Release/MacRecoveryX-${{github.ref_name}}-macos.zip

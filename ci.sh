@@ -10,7 +10,7 @@ fi
 git add .
 
 # 提交更改并附带提交消息
-git commit -m "测试tag"
+git commit -m "$2"
 
 # 创建标签，并以提供的版本号命名
 git tag "$1"
