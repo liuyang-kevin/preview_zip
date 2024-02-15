@@ -3,9 +3,8 @@ name: Flutter CI
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   # build-and-release-linux:
@@ -117,6 +116,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ github.ref }}
+          body: TODO New Release.
+          draft: false
+          prerelease: false
           files: build/windows/x64/runner/Release/preview_zip_website-${{github.ref_name}}-windows.zip
 
   # build-and-release-macos:

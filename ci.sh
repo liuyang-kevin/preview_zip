@@ -15,7 +15,4 @@ git commit -m "测试tag"
 # 创建标签，并以提供的版本号命名
 git tag "$1"
 
-# 推送提交和标签到远程仓库
-git push origin "$1"
-
-git push
+git push --tags
