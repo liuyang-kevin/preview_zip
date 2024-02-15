@@ -58,6 +58,39 @@ jobs:
       #   with:
       #     arch: x64
       #     toolset: 14.38.33130
+      # - name: 删除不需要的版本,强制webview可以编译
+      #   run: |
+      #     Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+      #     $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+      #     $componentsToRemove= @(
+      #       "Microsoft.VisualStudio.Component.Windows10SDK.19041"
+      #       "Microsoft.VisualStudio.Component.Windows10SDK.20348"
+      #       "Microsoft.VisualStudio.Component.Windows10SDK.22000"
+      #       "Microsoft.VisualStudio.Component.Windows10SDK"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM.Spectre"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64"
+      #       "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64.Spectre"
+      #     )
+      #     [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
+      #     $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
+      #     # should be run twice
+      #     $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+      #     $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
       - name: 删除不需要的版本,强制webview可以编译
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
@@ -67,24 +100,8 @@ jobs:
             "Microsoft.VisualStudio.Component.Windows10SDK.20348"
             "Microsoft.VisualStudio.Component.Windows10SDK.22000"
             "Microsoft.VisualStudio.Component.Windows10SDK"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64.Spectre"
             "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64"
             "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64.Spectre"
           )
           [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
           $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
